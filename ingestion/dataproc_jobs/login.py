@@ -223,7 +223,7 @@ def main():
         spark = creat_spark_session()
 
         for source_table in teradata_tables:
-            df_td = fetch_from_teradata(spark, conf['user'],conf['password'], conf['host_name'], conf['source_db'], conf['source_table'],conf['port'])
+            df_td = fetch_from_teradata(spark, conf['user'],conf['password'], conf['host_name'], conf['source_db'], source_table, conf['port'])
 
             start_time = datetime.now()
             total_records = int(df_td.count())
