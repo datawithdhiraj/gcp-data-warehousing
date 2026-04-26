@@ -128,7 +128,6 @@ class helperClass:
             print(e)
             raise
 
-
 # fetch secret values
 secret_list = ["abcd_td_prod_id", "abcd_td_prod_pass", "abcd_td_prod_srvr"]
 
