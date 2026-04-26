@@ -7,6 +7,109 @@ from google.cloud import secretmanager
 from pyspark.sql.functions import current_timestamp, col, date_format, from_utc_timestamp
 import requests, json
 
+def creat_spark_session():
+    return SparkSession.builder \
+            .appName("CloudSQL-MySQL-Read") \
+            .config("spark.jars.packages","mysql:mysql-connector-java:8.0.33") \
+            .getOrCreate()
+    #.config("spark.jars", f"gs://{gcs_bucket}/mysql-connector-java-8.0.33.jar") \
+
+class helperClass:
+
+    def fetch_secret_value(project_id: str, secret_id: str, version_number: str):
+        try:
+            client = secretmanager.SecretManagerServiceClient()
+            parent = f"projects/{project_id}/"
+            request_data = {"name": parent + f"secrets/{secret_id}/versions/{version_number}"}
+            response = client.access_secret_version(request=request_data)
+            return response.payload.data.decode("UTF-8")
+
+        except Exception as e:
+            print(e)
+            raise
+
+def fetch_conf():
+    # fetch secret values
+    secret_list = ["abcd_td_prod_id", "abcd_td_prod_pass", "abcd_td_prod_srvr"]
+    secret_value_mapping = dict()
+    for secret_name in secret_list:
+        version = 1
+        secret_value_mapping[secret_name] = helperClass.fetch_secret_value(
+            project_id="abcd-dataplatform-prod",
+            secret_id=secret_name,
+            version_number=version
+        )
+    config = {
+        "user": secret_value_mapping["abcd_td_prod_id"],
+        "password": secret_value_mapping["abcd_td_prod_pass"],
+        "host_name": secret_value_mapping["abcd_td_prod_srvr"],
+        "port": "3306",
+        "source_db": "teradata_customer_db",
+        "project_id": "project-29571d0a-16d0-4c51-be6",
+        "gcs_bucket": "gcs-bucket-for-practice",
+        "dataset_id": "abfssl_teradata_raw"
+    }
+    return config
+
+def fetch_from_teradata(spark, user, password, host_name, source_db, source_table,port):
+    sql = f"select * from {source_db}.{source_table}"
+    jdbc_url = f"jdbc:mysql://{host_name}:{port}/{source_db}"
+
+    return  spark.read.format("jdbc") \
+    .option("url", jdbc_url) \
+    .option("dbtable", f'({sql}) as src') \
+    .option("user", user) \
+    .option("password", password) \
+    .option("driver", "com.mysql.cj.jdbc.Driver") \
+    .load()
+
+def load_into_bq(df_td, project_id, dataset_id, table_id, gcs_bucket):
+    df_td_with_timestamps = df_td \
+        .withColumn("created_at", from_utc_timestamp(current_timestamp(), "Asia/Kolkata")) \
+        .withColumn("modified_at", from_utc_timestamp(current_timestamp(), "Asia/Kolkata"))
+
+    # iso_format = "yyyy-MM-dd'T'HH:mm:ss"
+    # df_td_with_timestamps = df_td_with_timestamps \
+    #     .withColumn("created_at", date_format(col("created_at"), iso_format)) \
+    #     .withColumn("modified_at", date_format(col("modified_at"), iso_format))
+
+    df_td_with_timestamps.write.format("bigquery") \
+        .option("table", f"{project_id}:{dataset_id}.{table_id}") \
+        .option("temporaryGcsBucket", gcs_bucket) \
+        .mode("overwrite") \
+        .save()
+
+def create_audit_entry(source_name, bq_dataset_name, bq_table_name,
+                       run_start_date, run_end_time, gcp_service_name,
+                       records_inserted, records_updated, records_deleted,
+                       ingestion_time, gcs_bucket, conf, spark):
+
+    schema = StructType([
+        StructField("SOURCE_NAME", StringType(), True),
+        StructField("BQ_DATASET_NAME", StringType(), True),
+        StructField("BQ_TABLE_NAME", StringType(), True),
+        StructField("RUN_START_TIME", TimestampType(), True),
+        StructField("RUN_END_TIME", TimestampType(), True),
+        StructField("GCP_SERVICE_NAME", StringType(), True),
+        StructField("RECORDS_INSERTED", IntegerType(), True),
+        StructField("RECORDS_UPDATED", IntegerType(), True),
+        StructField("RECORDS_DELETED", IntegerType(), True),
+        StructField("INGESTION_TIME", TimestampType(), True)
+    ])
+
+    data = [(source_name, bq_dataset_name, bq_table_name,
+             run_start_date, run_end_time, gcp_service_name,
+             records_inserted, records_updated, records_deleted,
+             ingestion_time)]
+
+    df = spark.createDataFrame(data, schema)
+
+    df.write \
+        .format("bigquery") \
+        .option("table", f"{conf['project_id']}.{conf['dataset_id']}.abcd_prod_data_audit") \
+        .option("temporaryGcsBucket", gcs_bucket) \
+        .mode("append") \
+        .save()
 
 def email_access_token():
     try:
@@ -39,7 +142,7 @@ def email_access_token():
 
     except Exception as e:
         raise Exception(f"Error in email_access_token function: {str(e)}")
-    
+
 def push_email_notification(flag, response_status_code=0, error=""):
 
     external_data = {
@@ -113,145 +216,39 @@ def push_email_notification(flag, response_status_code=0, error=""):
     except Exception as e:
         raise Exception(f"Error in push_email_notification function: {str(e)}")
 
+def main():
+    try:
+        teradata_tables = ['customers', 'addresses', 'customer_preferences']
+        conf = fetch_conf()
+        spark = creat_spark_session()
 
-class helperClass:
+        for source_table in teradata_tables:
+            df_td = fetch_from_teradata(spark, conf['user'],conf['password'], conf['host_name'], conf['source_db'], conf['source_table'],conf['port'])
 
-    def fetch_secret_value(project_id: str, secret_id: str, version_number: str):
-        try:
-            client = secretmanager.SecretManagerServiceClient()
-            parent = f"projects/{project_id}/"
-            request_data = {"name": parent + f"secrets/{secret_id}/versions/{version_number}"}
-            response = client.access_secret_version(request=request_data)
-            return response.payload.data.decode("UTF-8")
+            start_time = datetime.now()
+            total_records = int(df_td.count())
 
-        except Exception as e:
-            print(e)
-            raise
+            load_into_bq(df_td, conf['project_id'], conf['dataset_id'], source_table, conf['gcs_bucket'])
 
-# fetch secret values
-secret_list = ["abcd_td_prod_id", "abcd_td_prod_pass", "abcd_td_prod_srvr"]
+            end_time = datetime.now()
+            create_audit_entry(
+                "TERADATA",
+                "abfssl_teradata_raw",
+                source_table,
+                start_time,
+                end_time,
+                "DATAPROC",
+                total_records,
+                None,
+                None,
+                datetime.now(),
+                conf['gcs_bucket'],
+                spark
+            )
 
-secret_value_mapping = dict()
-for secret_name in secret_list:
-    version = "2" if secret_name == "abcd_td_prod_srvr" else "1"
-    secret_value_mapping[secret_name] = helperClass.fetch_secret_value(
-        project_id="abcd-dataplatform-prod",
-        secret_id=secret_name,
-        version_number=version
-    )
+    except Exception as e:
+        push_email_notification(flag='internal', error=str(e))
+    spark.stop()
 
-# Initialize configs
-source_db = "CENTRAL_ANALYTICS"
-source_table = "LOGIN_TABLE"
-
-user = secret_value_mapping["abcd_td_prod_id"]
-password = secret_value_mapping["abcd_td_prod_pass"]
-host_name = secret_value_mapping["abcd_td_prod_srvr"]
-
-project_id = "abffsl-dataplatform-prod"
-gcs_bucket = "abcd-teradata-prod"
-dataset_id = "abfssl_teradata_raw"
-table_id = "LOGIN_TABLE"
-
-
-def fetch_from_teradata(spark, user, password, host_name, source_db, source_table):
-    driver = "com.teradata.jdbc.TeraDriver"
-    sql = f"select * from {source_db}.{source_table}"
-    jdbc_url = f"jdbc:teradata://{host_name}/DATABASE={source_db},LOGMECH=LDAP"
-
-    return spark.read \
-        .format('jdbc') \
-        .option('driver', driver) \
-        .option('url', jdbc_url) \
-        .option('dbtable', f'({sql}) as src') \
-        .option('user', user) \
-        .option('password', password) \
-        .load()
-
-
-def load_into_bq(df_td, project_id, dataset_id, table_id, gcs_bucket):
-    df_td_with_timestamps = df_td \
-        .withColumn("created_at", from_utc_timestamp(current_timestamp(), "Asia/Kolkata")) \
-        .withColumn("modified_at", from_utc_timestamp(current_timestamp(), "Asia/Kolkata"))
-
-    iso_format = "yyyy-MM-dd'T'HH:mm:ss"
-
-    df_td_with_timestamps = df_td_with_timestamps \
-        .withColumn("created_at", date_format(col("created_at"), iso_format)) \
-        .withColumn("modified_at", date_format(col("modified_at"), iso_format))
-
-    df_td_with_timestamps.write.format("bigquery") \
-        .option("table", f"{project_id}:{dataset_id}.{table_id}") \
-        .option("temporaryGcsBucket", gcs_bucket) \
-        .mode("overwrite") \
-        .save()
-
-
-spark = SparkSession.builder \
-    .config("spark.jars.packages", "com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.22.0") \
-    .config("spark.jars", f"gs://{gcs_bucket}/teradata_jdbc_driver.jar") \
-    .config("spark.sql.parquet.datetimeRebaseModeInWrite", "LEGACY") \
-    .appName("BigQueryDeleteExample") \
-    .getOrCreate()
-
-
-try:
-    df_td = fetch_from_teradata(spark, user, password, host_name, source_db, source_table)
-    load_into_bq(df_td, project_id, dataset_id, table_id, gcs_bucket)
-
-except Exception as e:
-    push_email_notification(flag='internal', error=str(e))
-
-
-def create_audit_entry(source_name, bq_dataset_name, bq_table_name,
-                       run_start_date, run_end_time, gcp_service_name,
-                       records_inserted, records_updated, records_deleted,
-                       ingestion_time, gcs_bucket):
-
-    schema = StructType([
-        StructField("SOURCE_NAME", StringType(), True),
-        StructField("BQ_DATASET_NAME", StringType(), True),
-        StructField("BQ_TABLE_NAME", StringType(), True),
-        StructField("RUN_START_TIME", TimestampType(), True),
-        StructField("RUN_END_TIME", TimestampType(), True),
-        StructField("GCP_SERVICE_NAME", StringType(), True),
-        StructField("RECORDS_INSERTED", IntegerType(), True),
-        StructField("RECORDS_UPDATED", IntegerType(), True),
-        StructField("RECORDS_DELETED", IntegerType(), True),
-        StructField("INGESTION_TIME", TimestampType(), True)
-    ])
-
-    data = [(source_name, bq_dataset_name, bq_table_name,
-             run_start_date, run_end_time, gcp_service_name,
-             records_inserted, records_updated, records_deleted,
-             ingestion_time)]
-
-    df = spark.createDataFrame(data, schema)
-
-    df.write \
-        .format("bigquery") \
-        .option("table", "abcd-dataplatform-prod.abcd_prod_data_logging_auditing.abcd_prod_data_audit") \
-        .option("temporaryGcsBucket", gcs_bucket) \
-        .mode("append") \
-        .save()
-
-
-start_time = datetime.now()
-total_records = int(df_td.count())
-end_time = datetime.now()
-
-create_audit_entry(
-    "TERADATA",
-    "abfssl_teradata_raw",
-    "LOGIN_TABLE",
-    start_time,
-    end_time,
-    "DATAPROC",
-    total_records,
-    None,
-    None,
-    datetime.now(),
-    gcs_bucket
-)
-
-spark.stop()
+if __name__ == "__main__":
+    main()
