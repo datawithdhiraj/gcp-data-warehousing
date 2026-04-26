@@ -1,0 +1,13 @@
+google-cloud-bigquery
+google-cloud-storage
+apache-airflow
+apache-airflow-providers-google
+pyspark
+functions-framework
+google-cloud-secret-manager>=2.20.0
+requests>=2.31.0
+pytz==2023.3.post1
+pandas
+xlrd
+gcsfs
+pyarrow
