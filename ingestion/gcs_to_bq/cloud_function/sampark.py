@@ -56,6 +56,7 @@ def hello_gcs(event, context):
         )
         load_job.result()
 
+        #Add audit logs
         table = bq_client.get_table(table_ref)
         print(f"Loaded data into {dataset_id}.{table_id}")
 
@@ -83,6 +84,7 @@ def hello_gcs(event, context):
                 print(f"Errors: {errors}")
             print('row_count', row_count, 'start_time', start_time, 'end_time', end_time)
 
+        # Move the processed blob from source to destination 
         source_bucket = gcs_client.get_bucket(bucket_name)
         destination_bucket = gcs_client.get_bucket(destination_bucket_name)
 
@@ -96,3 +98,19 @@ def hello_gcs(event, context):
         push_email_notification(flag='internal', error=str(e))
         print(f"An error occurred: {str(e)}")
         return {'error': str(e)}
+    
+
+# uri = f"gs://{bucket_name}/{gcs_file_path}"
+
+# job_config = bigquery.LoadJobConfig(
+#     source_format=bigquery.SourceFormat.CSV,
+#     autodetect=True
+# )
+
+# load_job = bq_client.load_table_from_uri(
+#     uri,
+#     table_ref,
+#     job_config=job_config
+# )
+
+# load_job.result()
