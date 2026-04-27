@@ -254,6 +254,7 @@ if __name__ == "__main__":
 
 # gsutil cp infrastructure/dataproc/init.sh gs://gcs-bucket-for-practice/config/
 # gsutil cp infrastructure/dataproc/requirements.txt gs://gcs-bucket-for-practice/config/
+# gsutil cp ingestion/dataproc_jobs/login.py gs://gcs-bucket-for-practice/scripts/pyspark/
 
 # gcloud dataproc clusters create project-cluster `
 #   --region=us-central1 `
@@ -262,9 +263,21 @@ if __name__ == "__main__":
 #   --master-boot-disk-size=50GB `
 #   --initialization-actions=gs://gcs-bucket-for-practice/config/init.sh
 
+# gcloud dataproc clusters create project-cluster `
+#   --region=us-central1 `
+#   --master-machine-type=e2-standard-2 `
+#   --worker-machine-type=e2-standard-2 `
+#   --num-workers=2 `
+#   --master-boot-disk-size=50GB `
+#   --worker-boot-disk-size=50GB `
+#   --initialization-actions=gs://gcs-bucket-for-practice/config/init.sh
 
-# gcloud dataproc clusters list --region=us-central1       
+# gcloud dataproc clusters list --region=us-central1 
 
-# gcloud dataproc jobs submit pyspark login.py --cluster=project-cluster --region=us-central1
+# gcloud dataproc jobs submit pyspark `
+#   gs://gcs-bucket-for-practice/scripts/pyspark/login.py `
+#   --cluster=project-cluster `
+#   --region=us-central1 `
+#   --properties spark.pyspark.python=python3      
 
 # gcloud dataproc clusters delete project-cluster --region=us-central1
