@@ -2,10 +2,9 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
 from datetime import datetime
-from google.cloud import bigquery
 from google.cloud import secretmanager
-from pyspark.sql.functions import current_timestamp, col, date_format, from_utc_timestamp
-import requests, json
+from pyspark.sql.functions import current_timestamp, from_utc_timestamp
+import requests
 
 def creat_spark_session():
     return SparkSession.builder \
@@ -106,7 +105,7 @@ def create_audit_entry(source_name, bq_dataset_name, bq_table_name,
 
     df.write \
         .format("bigquery") \
-        .option("table", f"{conf['project_id']}.{conf['dataset_id']}.abcd_prod_data_audit") \
+        .option("table", f"{conf['project_id']}:{conf['dataset_id']}.abcd_prod_data_audit") \
         .option("temporaryGcsBucket", gcs_bucket) \
         .mode("append") \
         .save()
@@ -252,3 +251,20 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# gsutil cp infrastructure/dataproc/init.sh gs://gcs-bucket-for-practice/config/
+# gsutil cp infrastructure/dataproc/requirements.txt gs://gcs-bucket-for-practice/config/
+
+# gcloud dataproc clusters create project-cluster `
+#   --region=us-central1 `
+#   --single-node `
+#   --master-machine-type=e2-standard-2 `
+#   --master-boot-disk-size=50GB `
+#   --initialization-actions=gs://gcs-bucket-for-practice/config/init.sh
+
+
+# gcloud dataproc clusters list --region=us-central1       
+
+# gcloud dataproc jobs submit pyspark login.py --cluster=project-cluster --region=us-central1
+
+# gcloud dataproc clusters delete project-cluster --region=us-central1
