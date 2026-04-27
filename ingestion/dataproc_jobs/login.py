@@ -31,11 +31,12 @@ class helperClass:
 def fetch_conf():
     # fetch secret values
     secret_list = ["abcd_td_prod_id", "abcd_td_prod_pass", "abcd_td_prod_srvr"]
+    project_id="project-29571d0a-16d0-4c51-be6"
     secret_value_mapping = dict()
     for secret_name in secret_list:
         version = 1
         secret_value_mapping[secret_name] = helperClass.fetch_secret_value(
-            project_id="abcd-dataplatform-prod",
+            project_id=project_id,
             secret_id=secret_name,
             version_number=version
         )
