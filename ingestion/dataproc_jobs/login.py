@@ -256,7 +256,6 @@ if __name__ == "__main__":
     main()
 
 # gsutil cp infrastructure/dataproc/init.sh gs://gcs-bucket-for-practice/config/
-# gsutil cp infrastructure/dataproc/requirements.txt gs://gcs-bucket-for-practice/config/
 # gsutil cp ingestion/dataproc_jobs/login.py gs://gcs-bucket-for-practice/scripts/pyspark/
 
 # gcloud dataproc clusters create project-cluster `
@@ -269,15 +268,12 @@ if __name__ == "__main__":
 #   --public-ip-address `
 #   --initialization-actions=gs://gcs-bucket-for-practice/config/init.sh
 
-
 # gcloud dataproc clusters list --region=us-central1 
 
 # gcloud dataproc jobs submit pyspark `
 #   gs://gcs-bucket-for-practice/scripts/pyspark/login.py `
 #   --cluster=project-cluster `
 #   --region=us-central1 `
-#   --py-files=gs://gcs-bucket-for-practice/config/deps.zip
-
 
 
 #== some extra commands ===================================================================================================
@@ -302,6 +298,12 @@ if __name__ == "__main__":
 # cd deps
 # Compress-Archive -Path * -DestinationPath ../deps.zip
 # gsutil cp deps.zip gs://gcs-bucket-for-practice/config/
+
+# gcloud dataproc jobs submit pyspark `
+#   gs://gcs-bucket-for-practice/scripts/pyspark/login.py `
+#   --cluster=project-cluster `
+#   --region=us-central1 `
+#   --py-files=gs://gcs-bucket-for-practice/config/deps.zip
 #=========================================================================
 
 # gcloud secrets add-iam-policy-binding YOUR_SECRET_NAME `
@@ -313,4 +315,6 @@ if __name__ == "__main__":
 #   --region=us-central1 \
 #   --format="value(config.gceClusterConfig.serviceAccount)"
 # =================================================================
+
+# gsutil cp infrastructure/dataproc/requirements.txt gs://gcs-bucket-for-practice/config/
 # ===========================================================================================================================================
