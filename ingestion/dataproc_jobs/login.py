@@ -20,6 +20,7 @@ class helperClass:
             client = secretmanager.SecretManagerServiceClient()
             parent = f"projects/{project_id}/"
             request_data = {"name": parent + f"secrets/{secret_id}/versions/{version_number}"}
+            print(request_data)
             response = client.access_secret_version(request=request_data)
             return response.payload.data.decode("UTF-8")
 
@@ -261,7 +262,7 @@ if __name__ == "__main__":
 #   --single-node `
 #   --master-machine-type=e2-standard-2 `
 #   --master-boot-disk-size=50GB `
-#   --initialization-actions=gs://gcs-bucket-for-practice/config/init.sh
+#   --initialization-actions=gs://gcs-bucket-for-practice/config/init.sh 
 
 # gcloud dataproc clusters create project-cluster `
 #   --region=us-central1 `
@@ -278,6 +279,30 @@ if __name__ == "__main__":
 #   gs://gcs-bucket-for-practice/scripts/pyspark/login.py `
 #   --cluster=project-cluster `
 #   --region=us-central1 `
-#   --properties spark.pyspark.python=python3      
+#   --py-files=gs://gcs-bucket-for-practice/config/deps.zip
 
 # gcloud dataproc clusters delete project-cluster --region=us-central1
+
+# gcloud compute ssh project-cluster-m --zone=us-central1-f
+# pip3 install google-cloud-secret-manager requests
+
+# == Zip the dependancies=================================================
+# pip install google-cloud-secret-manager requests -t deps/
+# cd deps
+# Compress-Archive -Path * -DestinationPath ../deps.zip
+# gsutil cp deps.zip gs://gcs-bucket-for-practice/config/
+#==============================================================
+
+# gcloud dataproc clusters create project-cluster `
+#   --region=us-central1 `
+#   --zone=us-central1-f `
+#   --single-node `
+#   --master-machine-type=e2-standard-2 `
+#   --master-boot-disk-size=50GB `
+#   --subnet=default `
+#   --public-ip-address `
+#   --initialization-actions=gs://gcs-bucket-for-practice/config/init.sh
+
+# gcloud secrets add-iam-policy-binding YOUR_SECRET_NAME `
+#   --member="serviceAccount:993103366834-compute@developer.gserviceaccount.com" `
+#   --role="roles/secretmanager.secretAccessor"
