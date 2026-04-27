@@ -244,6 +244,7 @@ def main():
                 None,
                 datetime.now(),
                 conf['gcs_bucket'],
+                conf,
                 spark
             )
 
@@ -260,19 +261,14 @@ if __name__ == "__main__":
 
 # gcloud dataproc clusters create project-cluster `
 #   --region=us-central1 `
+#   --zone=us-central1-f `
 #   --single-node `
 #   --master-machine-type=e2-standard-2 `
 #   --master-boot-disk-size=50GB `
-#   --initialization-actions=gs://gcs-bucket-for-practice/config/init.sh 
-
-# gcloud dataproc clusters create project-cluster `
-#   --region=us-central1 `
-#   --master-machine-type=e2-standard-2 `
-#   --worker-machine-type=e2-standard-2 `
-#   --num-workers=2 `
-#   --master-boot-disk-size=50GB `
-#   --worker-boot-disk-size=50GB `
+#   --subnet=default `
+#   --public-ip-address `
 #   --initialization-actions=gs://gcs-bucket-for-practice/config/init.sh
+
 
 # gcloud dataproc clusters list --region=us-central1 
 
@@ -282,9 +278,23 @@ if __name__ == "__main__":
 #   --region=us-central1 `
 #   --py-files=gs://gcs-bucket-for-practice/config/deps.zip
 
+
+
+#== some extra commands ===================================================================================================
+# gcloud dataproc clusters create project-cluster `
+#   --region=us-central1 `
+#   --master-machine-type=e2-standard-2 `
+#   --worker-machine-type=e2-standard-2 `
+#   --num-workers=2 `
+#   --master-boot-disk-size=50GB `
+#   --worker-boot-disk-size=50GB `
+#   --initialization-actions=gs://gcs-bucket-for-practice/config/init.sh
+
 # gcloud dataproc clusters delete project-cluster --region=us-central1
 
 # gcloud compute ssh project-cluster-m --zone=us-central1-f
+# curl ifconfig.me
+
 # pip3 install google-cloud-secret-manager requests
 
 # == Zip the dependancies=================================================
@@ -292,18 +302,15 @@ if __name__ == "__main__":
 # cd deps
 # Compress-Archive -Path * -DestinationPath ../deps.zip
 # gsutil cp deps.zip gs://gcs-bucket-for-practice/config/
-#==============================================================
-
-# gcloud dataproc clusters create project-cluster `
-#   --region=us-central1 `
-#   --zone=us-central1-f `
-#   --single-node `
-#   --master-machine-type=e2-standard-2 `
-#   --master-boot-disk-size=50GB `
-#   --subnet=default `
-#   --public-ip-address `
-#   --initialization-actions=gs://gcs-bucket-for-practice/config/init.sh
+#=========================================================================
 
 # gcloud secrets add-iam-policy-binding YOUR_SECRET_NAME `
 #   --member="serviceAccount:993103366834-compute@developer.gserviceaccount.com" `
 #   --role="roles/secretmanager.secretAccessor"
+
+# == get service account =========================================
+# gcloud dataproc clusters describe project-cluster \
+#   --region=us-central1 \
+#   --format="value(config.gceClusterConfig.serviceAccount)"
+# =================================================================
+# ===========================================================================================================================================
