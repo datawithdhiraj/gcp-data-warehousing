@@ -2,15 +2,19 @@
 set -e
 set -x
 
-echo "Installing Python dependencies..."
+echo "Starting initialization..."
 
-# Ensure python3 + pip3
-apt-get update -y
-apt-get install -y python3-pip
+# Avoid long apt update (optional but safer)
+apt-get update -y -qq
 
-# Install packages globally
-pip3 install --upgrade pip
-pip3 install google-cloud-secret-manager
-pip3 install requests
+# Ensure pip3 exists
+apt-get install -y python3-pip -qq
 
-echo "Dependencies installed successfully"
+# Upgrade pip quickly
+pip3 install --upgrade pip --no-cache-dir
+
+# Install only required libs (fast)
+pip3 install --no-cache-dir google-cloud-secret-manager
+pip3 install --no-cache-dir requests
+
+echo "Initialization completed!"
