@@ -1,7 +1,5 @@
-import airflow
 from airflow import models
 from airflow.providers.google.cloud.operators.dataproc import DataprocSubmitJobOperator
-import datetime
 import pendulum
 
 default_args = {
