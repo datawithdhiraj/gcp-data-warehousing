@@ -1,0 +1,4 @@
+campaign_id,campaign_name,channel,start_date,end_date,budget,status
+1,Diwali Sale,Facebook,2026-10-01,2026-10-31,50000,active
+2,New Year Blast,Google Ads,2026-12-20,2027-01-05,75000,planned
+3,Summer Offer,Instagram,2026-04-01,2026-04-30,30000,completed

@@ -1,0 +1,5 @@
+conversion_id,customer_id,campaign_id,conversion_time,conversion_type,revenue
+3001,201,1,2026-10-05 10:20:00,Purchase,1200.50
+3002,202,1,2026-10-05 10:25:00,Signup,0.00
+3003,203,2,2026-12-22 11:30:00,Purchase,2200.00
+3004,204,3,2026-04-05 10:00:00,Purchase,800.75
