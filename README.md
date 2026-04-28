@@ -7,9 +7,9 @@ This project ingests data from multiple sources into BigQuery raw layer using:
 - Cloud Functions (GCS trigger)
 
 ## Architecture
-MySQL → Dataproc → BigQuery  
-MySQL → Datastream → BigQuery  
-MySQL → Datastream → BigQuery  
+Terradata(simulated with MySQL) → Dataproc → BigQuery  
+AWS RDS Mysql(simulated with cloud sql -MySQL) → Datastream → BigQuery  
+on prem Mysql(simulated with MySQL) → Datastream → BigQuery  
 GCS → Cloud Function → BigQuery  
 
 ```
@@ -37,4 +37,20 @@ Dashboards (Looker / Tableau)
 3. Deploy using CI/CD
 
 
+
+## How CI CD works 
+### For Scheduling
+```
+Developer (VS Code)
+        ↓
+GitHub Repo
+        ↓
+CI/CD Pipeline (GitHub Actions / Cloud Build)
+        ↓
+GCS Bucket (Composer DAG folder & GCS pyspark Script bucket)
+        ↓
+Cloud Composer (Airflow)
+        ↓
+Schedules & Runs DAGs
+```
 

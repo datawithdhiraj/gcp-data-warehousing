@@ -46,7 +46,7 @@ def fetch_conf():
         "host_name": secret_value_mapping["abcd_td_prod_srvr"],
         "port": "3306",
         "source_db": "teradata_customer_db",
-        "project_id": "project-29571d0a-16d0-4c51-be6",
+        "project_id": project_id,
         "gcs_bucket": "gcs-bucket-for-practice",
         "dataset_id": "abfssl_teradata_raw"
     }
@@ -275,6 +275,10 @@ if __name__ == "__main__":
 #   --cluster=project-cluster `
 #   --region=us-central1 `
 
+
+#== Uplad dag file in respective bucket ===================================================================================
+# gsutil cp orchestration\airflow_dags\dag.py gs://us-central1-managed-airflow-53105cea-bucket/dags                                                        
+#===========================================================================================================================
 
 #== some extra commands ===================================================================================================
 # gcloud dataproc clusters create project-cluster `

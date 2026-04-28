@@ -1,32 +1,42 @@
 from airflow import models
 from airflow.providers.google.cloud.operators.dataproc import DataprocSubmitJobOperator
 import pendulum
+from datetime import timedelta
 
+# Default arguments
 default_args = {
+    'owner': 'data-engineering-team',
     'depends_on_past': False,
-    'start_date': pendulum.datetime(2024, 4, 18, tz="Asia/Kolkata")
+    'email': ['dhirajdhande112@gmail.com'],
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 0,
+    'retry_delay': timedelta(minutes=5)
 }
 
-CLUSTER_NAME = 'teradata-prod'
-REGION = 'asia-south1'
-PROJECT_ID = 'abcd-dataplatform-prod'
-PYSPARK_URI1 = 'gs://abcd-teradata-prod/LOGIN_TABLE.py'
+CLUSTER_NAME = 'project-cluster'
+REGION = 'us-central1'
+PROJECT_ID = 'project-29571d0a-16d0-4c51-be6'
+PYSPARK_URI1 = 'gs://gcs-bucket-for-practice/scripts/pyspark/login.py'
 
 PYSPARK_JOB1 = {
     "reference": {"project_id": PROJECT_ID},
     "placement": {"cluster_name": CLUSTER_NAME},
     "pyspark_job": {
-        "main_python_file_uri": PYSPARK_URI1,
-        "jar_file_uris": ["gs://abcd-teradata-prod/teradata_jdbc_driver.jar"]
+        "main_python_file_uri": PYSPARK_URI1
     }
 }
 
+# DAG definition
 with models.DAG(
-    'LOGIN_TABLE',
+    dag_id='dataproc_workflow_dag_terradata',
     default_args=default_args,
-    description='A simple DAG to create a Dataproc workflow',
-    schedule_interval='00 07 * * *',
-    # start_date=datetime.datetime.now()
+    description='Dataproc job orchestration DAG',
+    start_date = pendulum.datetime(2024, 1, 1, tz="Asia/Kolkata"),
+    schedule='*/30 * * * *',   # every hour at minute 50
+    catchup=False,
+    max_active_runs=1,
+    tags=['dataproc', 'etl']
 ) as dag:
 
     load_data = DataprocSubmitJobOperator(
@@ -37,3 +47,5 @@ with models.DAG(
     )
 
     load_data
+
+#gsutil cp orchestration\airflow_dags\dag.py gs://us-central1-managed-airflow-53105cea-bucket/dags                                                        
