@@ -29,8 +29,8 @@ def read_csv_from_gcs(uri, project_id):
 
 
 def transform_dataframe(df, curr_time):
-    df['created_at'] = curr_time
-    df['modified_at'] = curr_time
+    df['created_at'] = pd.to_datetime(curr_time, utc=True)
+    df['modified_at'] = pd.to_datetime(curr_time, utc=True)
 
     # Rename column if exists
     if 'Application Id/Proposer number' in df.columns:
@@ -61,7 +61,22 @@ def insert_audit_log(start_time, end_time, table_id, row_count):
     table_id_audit = 'abcd_prod_data_audit'
 
     table_ref = client.dataset(dataset_id).table(table_id_audit)
-    table = bigquery.Table(table_ref)
+    
+    # Define the schema so BigQuery knows how to create the table
+    schema = [
+        bigquery.SchemaField("source_system", "STRING"),
+        bigquery.SchemaField("raw_table", "STRING"),
+        bigquery.SchemaField("table_id", "STRING"),
+        bigquery.SchemaField("start_time", "TIMESTAMP"),
+        bigquery.SchemaField("end_time", "TIMESTAMP"),
+        bigquery.SchemaField("process_name", "STRING"),
+        bigquery.SchemaField("row_count", "INTEGER"),
+        bigquery.SchemaField("col8", "STRING"), # Placeholder names
+        bigquery.SchemaField("col9", "STRING"),
+        bigquery.SchemaField("col10", "STRING"),
+    ]
+    
+    table = bigquery.Table(table_ref, schema=schema)
     client.create_table(table, exists_ok=True)
 
     rows_to_insert = [
@@ -70,6 +85,7 @@ def insert_audit_log(start_time, end_time, table_id, row_count):
     ]
 
     if row_count != -1:
+        # It's better to use insert_rows_json or ensure the table object is refreshed
         errors = client.insert_rows(table, rows_to_insert)
         if errors:
             print(f"Audit insert errors: {errors}")
@@ -79,14 +95,15 @@ def insert_audit_log(start_time, end_time, table_id, row_count):
 
 def move_file(bucket_name, destination_bucket_name, file_path):
     gcs_client = storage.Client()
-
     source_bucket = gcs_client.get_bucket(bucket_name)
-    destination_bucket = gcs_client.get_bucket(destination_bucket_name)
+    destination_bucket = gcs_client.get_bucket(destination_bucket_name) # Ensure this is just the bucket name
+
+    # If you need to move it to a specific folder:
+    destination_blob_name = f"sampark/processed/{file_path}" 
 
     blob = source_bucket.blob(file_path)
-    source_bucket.copy_blob(blob, destination_bucket, blob.name)
+    source_bucket.copy_blob(blob, destination_bucket, destination_blob_name)
     source_bucket.delete_blob(blob.name)
-
     print(f"Moved file {file_path} to processed bucket")
 
 
@@ -94,18 +111,18 @@ def move_file(bucket_name, destination_bucket_name, file_path):
 # Main Cloud Function
 # -------------------------------
 
-def hello_gcs(event, context):
+def hello_gcs(request):
     try:
         start_time = get_current_ist_time()
-
+        data = request.get_json()
         # Env variables
         bucket_name = os.environ.get('bucket_name')
-        destination_bucket_name = os.environ.get('bucket_name_processed')
-        dataset_id = os.environ.get('dataset')
+        destination_bucket_name = os.environ.get('destination_bucket_name')
+        dataset_id = os.environ.get('dataset_id')
         project_id="project-29571d0a-16d0-4c51-be6"
 
         # File details
-        gcs_file_path = event['name']
+        gcs_file_path = data.get('name')
         print(f"GCS file path: {gcs_file_path}")
 
         table_id = get_table_id_from_filename(gcs_file_path)
@@ -136,17 +153,4 @@ def hello_gcs(event, context):
         print(f"Error: {str(e)}")
         return {'error': str(e)}
 
-# uri = f"gs://{bucket_name}/{gcs_file_path}"
-
-# job_config = bigquery.LoadJobConfig(
-#     source_format=bigquery.SourceFormat.CSV,
-#     autodetect=True
-# )
-
-# load_job = bq_client.load_table_from_uri(
-#     uri,
-#     table_ref,
-#     job_config=job_config
-# )
-
-# load_job.result()
+# gsutil cp infrastructure\cloudfunction\data\* gs://abcd-sampark-dataset/   
