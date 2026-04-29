@@ -107,7 +107,7 @@ def create_audit_entry(source_name, bq_dataset_name, bq_table_name,
 
     df.write \
         .format("bigquery") \
-        .option("table", f"{conf['project_id']}:{conf['dataset_id']}.abcd_prod_data_audit") \
+        .option("table", f"{conf['project_id']}:abcd_prod_data_logging_auditing.abcd_prod_data_audit") \
         .option("temporaryGcsBucket", gcs_bucket) \
         .mode("append") \
         .save()

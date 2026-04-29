@@ -102,6 +102,7 @@ def hello_gcs(event, context):
         bucket_name = os.environ.get('bucket_name')
         destination_bucket_name = os.environ.get('bucket_name_processed')
         dataset_id = os.environ.get('dataset')
+        project_id="project-29571d0a-16d0-4c51-be6"
 
         # File details
         gcs_file_path = event['name']
@@ -114,7 +115,7 @@ def hello_gcs(event, context):
         print(f"File URI: {uri}")
 
         # Read + Transform
-        df = read_csv_from_gcs(uri, 'abcd-dataplatform-prod')
+        df = read_csv_from_gcs(uri, project_id)
         df = transform_dataframe(df, start_time)
 
         # Load to BigQuery
