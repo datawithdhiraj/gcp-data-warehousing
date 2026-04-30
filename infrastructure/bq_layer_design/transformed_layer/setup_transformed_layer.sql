@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS 'abfssl_teradata_transformed';
+CREATE SCHEMA IF NOT EXISTS 'abfssl_teradata_transformed';
 CREATE TABLE IF NOT EXISTS `abfssl_teradata_transformed.customers` (
   customer_id INT64,
   first_name STRING,
@@ -40,7 +40,7 @@ PARTITION BY DATE(ingestion_time);
 -- )
 -- PARTITION BY DATE(ingestion_time)
 -- ==========================================================================================================================================================
-CREATE DATABASE IF NOT EXISTS 'abcd_payments_transformed';
+CREATE SCHEMA IF NOT EXISTS 'abcd_payments_transformed';
 CREATE TABLE IF NOT EXISTS `abcd_payments_transformed.transactions` (
   transaction_id INT64,
   customer_id INT64,
@@ -75,7 +75,7 @@ PARTITION BY DATE(ingestion_time);
 -- PARTITION BY DATE(ingestion_time)
 
 -- =================================================================================================================================================
-CREATE DATABASE IF NOT EXISTS 'abcd_mobile_transformed';
+CREATE SCHEMA IF NOT EXISTS 'abcd_mobile_transformed';
 CREATE TABLE IF NOT EXISTS `abcd_mobile_transformed.user_sessions` (
   session_id INT64,
   customer_id INT64,
@@ -111,7 +111,7 @@ PARTITION BY DATE(ingestion_time);
 
 -- =====================================================================================================
 
-CREATE DATABASE IF NOT EXISTS 'abcd_sampark_transform';
+CREATE SCHEMA IF NOT EXISTS 'abcd_sampark_transform';
 CREATE TABLE IF NOT EXISTS `abcd_sampark_transform.campaigns` (
   campaign_id INT64,
   campaign_name STRING,
