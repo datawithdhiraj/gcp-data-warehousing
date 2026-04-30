@@ -65,3 +65,6 @@ Schedules & Runs DAGs
 ## Setup for cloud run (GCS => BQ)
 1. Create cloud function with required variables in sampark.py
 2. Replace the default scripts of cloud function by scripts in ingestion\gcs_to_bq\cloud_function
+
+## Looker studio
+1. Build looker studio report by usring curated layer tables
