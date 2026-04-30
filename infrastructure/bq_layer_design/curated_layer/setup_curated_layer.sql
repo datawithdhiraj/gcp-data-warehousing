@@ -1,3 +1,5 @@
+CREATE DATABASE IF NOT EXISTS 'abcd_curated';
+
 CREATE TABLE IF NOT EXISTS `abcd_curated.customer_summary` (
   customer_id INT64,
   first_name STRING,

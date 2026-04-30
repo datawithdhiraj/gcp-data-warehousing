@@ -94,7 +94,7 @@ WHERE rn = 1
 -- FROM (
 --   SELECT *,
 --          ROW_NUMBER() OVER (PARTITION BY refund_id ORDER BY created_at DESC) AS rn
---   FROM `abcd_payments_transformed.refunds`
+--   FROM `abcd_payments_row.refunds`
 -- )
 -- WHERE rn = 1
 --   AND refund_amount > 0;
