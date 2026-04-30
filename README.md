@@ -1,4 +1,4 @@
-# GCP Data Pipeline Project
+# GCP Data warehouse Project 
 
 ## Overview
 This project ingests data from multiple sources into BigQuery raw layer using:
@@ -30,16 +30,8 @@ Analytics Layer
 Dashboards (Looker / Tableau)
 ```
 
-## Setup
-1. Install dependencies: Pip install -r requirements.txt
-2. Run setup_databases.sql and load_sample_data.sql in mysql client
-2. Configure GCP credentials
-3. Deploy using CI/CD
 
-
-
-## How CI CD works 
-### For Scheduling
+## How CI CD works For Scheduling
 ```
 Developer (VS Code)
         ↓
@@ -54,3 +46,22 @@ Cloud Composer (Airflow)
 Schedules & Runs DAGs
 ```
 
+## Setup for dataproc (teradata => BQ)
+1. install gclod sdk
+2. create virtual env, then gcloud init
+3. Install dependencies: Pip install -r requirements.txt
+4. Run setup_databases.sql and load_sample_data.sql in mysql client
+5. Run infrastructure\bq_layer_design\row_layer\setup_row_layer.sql in BQ (it will setup row layer)
+6. Go to the login.py script and run powersell command (metioned at last of script) inside the terminal 
+7. by doing this testing of pyspark script will be done
+8. Now schedulde this script by cloud composer using dag : orchestration\airflow_dags\dag.py
+
+
+## Setup for datastream (mysql => BQ)
+1. Run infrastructure\bq_layer_design\transformed_layer\setup_transformed_layer.sql in BQ
+2. Run infrastructure\bq_layer_design\curated_layer\setup_curated_layer.sql in BQ
+3. add the select scrits inside of infrastructure\bq_layer_design\bq_scheduler_scripts as schedulde queris in BQ
+
+## Setup for cloud run (GCS => BQ)
+1. Create cloud function with required variables in sampark.py
+2. Replace the default scripts of cloud function by scripts in ingestion\gcs_to_bq\cloud_function
