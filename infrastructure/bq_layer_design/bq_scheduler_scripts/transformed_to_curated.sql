@@ -7,7 +7,7 @@ SELECT
   COUNT(DISTINCT s.session_id) AS total_sessions,
   CURRENT_TIMESTAMP() AS ingestion_time
 FROM `abfssl_teradata_transformed.customers` c
-LEFT JOIN `abcd_payments_transformed.transactions` t
+LEFT JOIN `abcd_payments_transformed.transaction` t
   ON c.customer_id = t.customer_id
 LEFT JOIN `abcd_mobile_transformed.user_sessions` s
   ON c.customer_id = s.customer_id
@@ -17,15 +17,14 @@ GROUP BY
   c.last_name;
 
 
-
 SELECT
   camp.campaign_id,
   camp.campaign_name,
   camp.channel,
   SUM(t.amount) AS total_revenue,
   CURRENT_TIMESTAMP() AS ingestion_time
-FROM `abcd_sampark_transform.campaigns` camp
-LEFT JOIN `abcd_payments_transformed.transactions` t
+FROM `abcd_sampark_transformed.campaigns` camp
+LEFT JOIN `abcd_payments_transformed.transaction` t
   ON camp.campaign_id = t.payment_method_id
 GROUP BY
   camp.campaign_id,

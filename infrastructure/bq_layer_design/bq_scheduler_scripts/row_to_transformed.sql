@@ -63,7 +63,7 @@ SELECT
 FROM (
   SELECT *,
          ROW_NUMBER() OVER (PARTITION BY transaction_id ORDER BY transaction_date DESC) AS rn
-  FROM `abcd_payments_row.transactions`
+  FROM `abcd_payments_row.aws_rds_mysql_payments_db_transactions`
 )
 WHERE rn = 1
   AND amount IS NOT NULL;
@@ -120,7 +120,7 @@ SELECT
 FROM (
   SELECT *,
          ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY session_start DESC) AS rn
-  FROM `abcd_mobile_row.user_sessions`
+  FROM `abcd_mobile_row.on_prem_app_db_user_sessions`
 )
 WHERE rn = 1
   AND session_end IS NOT NULL;
@@ -168,7 +168,7 @@ SELECT
   end_date,
 
   -- Derived metric
-  DATE_DIFF(end_date, start_date, DAY) AS campaign_duration_days,
+DATE_DIFF(DATE(end_date), DATE(start_date), DAY) AS campaign_duration_days,
 
   budget,
   UPPER(status) AS status,
