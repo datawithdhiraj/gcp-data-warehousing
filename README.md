@@ -31,21 +31,6 @@ Dashboards (Looker / Tableau)
 ```
 
 
-## How CI CD works For Scheduling
-```
-Developer (VS Code)
-        ↓
-GitHub Repo
-        ↓
-CI/CD Pipeline (GitHub Actions / Cloud Build)
-        ↓
-GCS Bucket (Composer DAG folder & GCS pyspark Script bucket)
-        ↓
-Cloud Composer (Airflow)
-        ↓
-Schedules & Runs DAGs
-```
-
 ## Setup for dataproc (teradata => BQ)
 1. install gclod sdk
 2. create virtual env, then gcloud init
@@ -68,3 +53,19 @@ Schedules & Runs DAGs
 
 ## Looker studio
 1. Build looker studio report by usring curated layer tables
+
+
+## How CI CD works For Scheduling
+```
+Developer (VS Code)
+        ↓
+GitHub Repo
+        ↓
+CI/CD Pipeline (GitHub Actions / Cloud Build)
+        ↓
+GCS Bucket (Composer DAG folder & GCS pyspark Script bucket)
+        ↓
+Cloud Composer (Airflow)
+        ↓
+Schedules & Runs DAGs
+```
