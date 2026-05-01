@@ -13,11 +13,14 @@ on prem Mysql(simulated with MySQL) → Datastream → BigQuery
 GCS → Cloud Function → BigQuery  
 
 ```
-MySQL (4 DBs)
+MySQL (3 DBs)
 ├── customer_db
 ├── payments_db
 ├── app_analytics_db
-└── sampark bucket in GCS
+
+GCS
+└── sampark bucket
+
         ↓
 Datastream / Dataproc / Cloud Run
         ↓
