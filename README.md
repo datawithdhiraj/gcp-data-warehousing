@@ -17,9 +17,9 @@ MySQL (4 DBs)
 ├── customer_db
 ├── payments_db
 ├── app_analytics_db
-└── sampark_db
+└── sampark bucket in GCS
         ↓
-Datastream / Dataproc / GCS
+Datastream / Dataproc / Cloud Run
         ↓
 BigQuery RAW
         ↓
